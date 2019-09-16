@@ -1,218 +1,256 @@
-import React from 'react';
+import React, { FunctionComponent, useCallback, useContext, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { connect } from 'react-redux';
 
 import DocumentForm from './DocumentForm';
-import { RouteComponentProps, withRouter } from 'react-router';
-import { getContacts, resetGetContacts } from '../store/actions/contacts';
-import { Box, Button, Heading, Paragraph } from 'grommet';
-import { documentRoutes } from './routes';
+import { Redirect, RouteComponentProps, withRouter } from 'react-router';
+import { Box, Button, Heading } from 'grommet';
 import { LinkPrevious, Money } from 'grommet-icons';
-import { canWriteToDoc, User } from '../common/models/user';
+import { canWriteToDoc } from '../common/models/user';
 import { Preloader } from '../components/Preloader';
-import { RequestState } from '../store/reducers/http-request-reducer';
 import { Document } from '../common/models/document';
 import { SecondaryHeader } from '../components/SecondaryHeader';
-import {
-  getDocumentById,
-  mintNFTForDocument,
-  resetGetDocumentById,
-  resetUpdateDocument,
-  updateDocument,
-} from '../store/actions/documents';
-import { getSchemasList, resetGetSchemasList } from '../store/actions/schemas';
 import { Schema } from '../common/models/schema';
 import { Contact } from '../common/models/contact';
 import { Modal } from '@centrifuge/axis-modal';
 import MintNftForm, { MintNftFormData } from './MintNftForm';
+import { httpClient } from '../http-client';
+import { AppContext } from '../App';
+import { useMergeState } from '../hooks';
+import { PageError } from '../components/PageError';
+import documentRoutes from './routes';
+import { NOTIFICATION, NotificationContext } from '../components/notifications/NotificationContext';
+import { AxiosError } from 'axios';
 
-type Props = {
-  updateDocument: typeof updateDocument;
-  resetUpdateDocument: typeof resetUpdateDocument;
-  getDocumentById: typeof getDocumentById
-  resetGetDocumentById: typeof resetGetDocumentById
-  getSchemasList: typeof getSchemasList
-  resetGetSchemasList: typeof resetGetSchemasList
-  getContacts: typeof getContacts;
-  resetGetContacts: typeof getContacts;
-  mintNFTForDocument: typeof mintNFTForDocument;
+type Props = RouteComponentProps<{ id: string }>;
+
+
+type State = {
+  loadingMessage: string | null
+  mintingOpened: boolean;
   document?: Document;
   schemas: Schema[];
-  contacts?: Contact[];
-  loggedInUser: User;
-  updatingDocument: RequestState<Document>;
-  mintingNFT: RequestState<Document>;
-} & RouteComponentProps<{ id?: string }>;
-
-export class EditDocument extends React.Component<Props> {
-
-  state = {
-    mintNft: false,
-  };
-
-  componentDidMount() {
-    if (this.props.match.params.id) {
-      this.props.getContacts();
-      this.props.getSchemasList();
-      this.props.getDocumentById(this.props.match.params.id);
-    }
-  }
-
-  componentWillUnmount() {
-    this.props.resetGetContacts();
-    this.props.resetGetSchemasList();
-    this.props.resetGetDocumentById();
-    this.props.resetUpdateDocument();
-  }
-
-  updateDocument = (document: Document) => {
-    this.props.updateDocument(document);
-  };
-
-  mintNFT = (data: MintNftFormData) => {
-    this.closeMintModal();
-    const { document, mintNFTForDocument, loggedInUser } = this.props;
-
-    mintNFTForDocument(document!._id || '', {
-      deposit_address: data.transfer ? data.deposit_address : loggedInUser.account,
-      proof_fields: data.registry!.proofs,
-      registry_address: data.registry!.address
-    });
-  };
+  contacts: Contact[];
+  error?: any;
+}
 
 
-  openMintModal = () => {
-    this.setState({ mintNft: true });
-  };
+const EditDocument: FunctionComponent<Props> = (props: Props) => {
 
-  closeMintModal = () => {
-    this.setState({ mintNft: false });
-  };
-
-  onCancel = () => {
-    this.props.history.goBack();
-  };
-
-  render() {
-    const {
-      updatingDocument,
-      mintingNFT,
+  const {
+    match: {
+      params: {
+        id,
+      },
+    },
+  } = props;
+  const [
+    {
+      loadingMessage,
       contacts,
       document,
       schemas,
-      loggedInUser,
-    } = this.props;
+      mintingOpened,
+      error,
+    },
+    setState] = useMergeState<State>({
+    loadingMessage: 'Loading',
+    mintingOpened: false,
+    schemas: [],
+    contacts: [],
+  });
 
-    const { mintNft } = this.state;
+  const { user } = useContext(AppContext);
+  const notification = useContext(NotificationContext);
 
-    if (!document || !contacts || !schemas) {
-      return <Preloader message="Loading"/>;
+
+  const handleHttpClientError = useCallback((error) => {
+    setState({
+      loadingMessage: null,
+      error,
+    });
+  }, [setState]);
+
+  const loadData = useCallback(async (id: string) => {
+    setState({
+      loadingMessage: 'Loading',
+    });
+    try {
+      const contacts = (await httpClient.contacts.list()).data;
+      const schemas = (await httpClient.schemas.list()).data;
+      const document = (await httpClient.documents.getById(id)).data;
+      setState({
+        loadingMessage: null,
+        contacts,
+        schemas,
+        document,
+      });
+
+    } catch (e) {
+      handleHttpClientError(e);
+    }
+  }, [setState, handleHttpClientError]);
+
+
+  useEffect(() => {
+    loadData(id);
+  }, [id, loadData]);
+
+
+  const updateDocument = async (newDoc: Document) => {
+    setState({
+      loadingMessage: 'Updating document',
+    });
+    try {
+      const document = (await httpClient.documents.update(newDoc)).data;
+      setState({
+        loadingMessage: null,
+        document,
+      });
+    } catch (e) {
+      setState({
+        loadingMessage: null,
+      });
+
+
+      notification.alert({
+        type: NOTIFICATION.ERROR,
+        title: ' Failed to update document',
+        message: (e as AxiosError)!.response!.data.message,
+      });
     }
 
-    if (updatingDocument.loading) {
-      return <Preloader message="Updating document" />;
-    }
+  };
 
+  const mintNFT = async (id: string | undefined, data: MintNftFormData) => {
 
-    if (mintingNFT.loading) {
-      return <Preloader message="Minting NFT" />;
-    }
-
-    // TODO add route resolvers and remove this logic
-    if (!canWriteToDoc(loggedInUser, document)) {
-      return <Paragraph color="status-error"> Access Denied! </Paragraph>;
-    }
-
-    const selectedSchema: Schema | undefined = schemas.find(s => {
-      return (
-        document.attributes &&
-        document.attributes._schema &&
-        s.name === document.attributes._schema.value
-      );
+    setState({
+      loadingMessage: 'Minting NFT',
+      mintingOpened: false,
     });
 
-    if (!selectedSchema) return <p>Unsupported schema</p>;
+    try {
+      const document = (await httpClient.documents.mint(
+        id,
+        {
+          deposit_address: data.transfer ? data.deposit_address : user!.account,
+          proof_fields: data.registry!.proofs,
+          registry_address: data.registry!.address,
+        },
+      )).data;
 
-    const mintActions = [
-        <Button key="mint_nft" onClick={this.openMintModal} icon={<Money/>} plain label={'Mint NFT'}/>,
-      ]
-    ;
-    return (
-      <>
-        <Modal
-          width={'large'}
-          opened={mintNft}
-          headingProps={{ level: 3 }}
-          title={`Mint NFT`}
-          onClose={this.closeMintModal}
-        >
-          <MintNftForm
-            onSubmit={this.mintNFT}
-            onDiscard={this.closeMintModal}
-            registries={selectedSchema.registries}
-          />
-        </Modal>
+      setState({
+        loadingMessage: null,
+        document,
+      });
 
-        <DocumentForm
-          onSubmit={this.updateDocument}
-          selectedSchema={selectedSchema}
-          mode={'edit'}
-          contacts={contacts}
-          document={document}
-          schemas={schemas}
-          mintActions={mintActions}
-        >
-          <SecondaryHeader>
-            <Box direction="row" gap="small" align="center">
-              <Link to={documentRoutes.index} size="large">
-                <LinkPrevious/>
-              </Link>
-              <Heading level="3">
-                {'Update Document'}
-              </Heading>
-            </Box>
+    } catch (e) {
+      setState({
+        loadingMessage: null,
+      });
 
-            <Box direction="row" gap="medium">
-              <Button
-                onClick={this.onCancel}
-                label="Discard"
-              />
-              <Button
-                type="submit"
-                primary
-                label="Update"
-              />
-
-            </Box>
-          </SecondaryHeader>
-        </DocumentForm>
-      </>
-    );
-  }
-}
-
-const mapStateToProps = (state) => {
-  return {
-    loggedInUser: state.user.auth.loggedInUser,
-    mintingNFT: state.documents.mintNFT,
-    document: state.documents.getById.data,
-    updatingDocument: state.documents.update,
-    contacts: state.contacts.get.data,
-    schemas: state.schemas.getList.data,
+      notification.alert({
+        type: NOTIFICATION.ERROR,
+        title: ' Failed to mint NFT',
+        message: (e as AxiosError)!.response!.data.message,
+      });
+    }
   };
+
+
+  const openMintModal = () => {
+    setState({ mintingOpened: true });
+  };
+
+  const closeMintModal = () => {
+    setState({ mintingOpened: false });
+  };
+
+  const onCancel = () => {
+    props.history.goBack();
+  };
+
+
+  if (loadingMessage) {
+    return <Preloader message={loadingMessage}/>;
+  }
+
+  if (error)
+    return <PageError error={error}/>;
+
+  // Redirect to view in case the user can not edit this document
+  if (!canWriteToDoc(user!, document)) {
+    return <Redirect to={documentRoutes.view.replace(':id', id)}/>;
+  }
+
+  const selectedSchema: Schema | undefined = schemas.find(s => {
+    return (
+      document &&
+      document.attributes &&
+      document.attributes._schema &&
+      s.name === document.attributes._schema.value
+    );
+  });
+
+  if (!selectedSchema) return <p>Unsupported schema</p>;
+
+  // Add mint action if schema has any registries defined
+  const mintActions = selectedSchema.registries && selectedSchema.registries.length > 0 ? [
+      <Button key="mint_nft" onClick={openMintModal} icon={<Money/>} plain label={'Mint NFT'}/>,
+    ] : []
+  ;
+  return (
+    <>
+      <Modal
+        width={'large'}
+        opened={mintingOpened}
+        headingProps={{ level: 3 }}
+        title={`Mint NFT`}
+        onClose={closeMintModal}
+      >
+        <MintNftForm
+          onSubmit={(data) => mintNFT(document!._id, data)}
+          onDiscard={closeMintModal}
+          registries={selectedSchema.registries}
+        />
+      </Modal>
+
+      <DocumentForm
+        onSubmit={updateDocument}
+        selectedSchema={selectedSchema}
+        mode={'edit'}
+        contacts={contacts}
+        document={document}
+        schemas={schemas}
+        mintActions={mintActions}
+      >
+        <SecondaryHeader>
+          <Box direction="row" gap="small" align="center">
+            <Link to={documentRoutes.index} size="large">
+              <LinkPrevious/>
+            </Link>
+            <Heading level="3">
+              {'Update Document'}
+            </Heading>
+          </Box>
+
+          <Box direction="row" gap="medium">
+            <Button
+              onClick={onCancel}
+              label="Discard"
+            />
+            <Button
+              type="submit"
+              primary
+              label="Update"
+            />
+
+          </Box>
+        </SecondaryHeader>
+      </DocumentForm>
+    </>
+  );
+
 };
 
-export default connect(
-  mapStateToProps,
-  {
-    updateDocument,
-    resetUpdateDocument,
-    getContacts,
-    resetGetContacts,
-    getDocumentById,
-    resetGetDocumentById,
-    getSchemasList,
-    resetGetSchemasList,
-    mintNFTForDocument,
-  },
-)(withRouter(EditDocument));
+
+export default withRouter(EditDocument);
