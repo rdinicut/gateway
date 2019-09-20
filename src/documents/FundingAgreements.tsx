@@ -14,7 +14,8 @@ import { Currency } from 'grommet-icons';
 import { canSignFunding, User } from '../common/models/user';
 import { FundingStatus } from './FundingStatus';
 import { getFundingStatus } from '../common/status';
-import { FundingRequest,FundingAgreement } from '../common/models/funding-request';
+import { FundingAgreement, FundingRequest } from '../common/models/funding-request';
+import { getContactByAddress } from '../common/contact-utils';
 
 type Props = {
   onAsyncStart?: (message: string) => void;
@@ -29,7 +30,7 @@ type Props = {
 type State = {
   modalOpened: boolean,
   selectedFundingAgreement: FundingAgreement,
-  isViewMode:boolean,
+  isViewMode: boolean,
 }
 
 export const FundingAgreements: FunctionComponent<Props> = (props) => {
@@ -40,8 +41,8 @@ export const FundingAgreements: FunctionComponent<Props> = (props) => {
     isViewMode,
   }, setState] = useMergeState<State>({
     modalOpened: false,
-    selectedFundingAgreement:new FundingAgreement(),
-    isViewMode:false,
+    selectedFundingAgreement: new FundingAgreement(),
+    isViewMode: false,
   });
 
 
@@ -100,19 +101,19 @@ export const FundingAgreements: FunctionComponent<Props> = (props) => {
     }
   };
 
-  const openModalInEditMode = (fundingAgreement:FundingAgreement) => {
+  const openModalInEditMode = (fundingAgreement: FundingAgreement) => {
     setState({
-      selectedFundingAgreement:fundingAgreement,
+      selectedFundingAgreement: fundingAgreement,
       isViewMode: false,
-      modalOpened: true
+      modalOpened: true,
     });
-  }
+  };
 
-  const openModalInViewMode = (fundingAgreement:FundingAgreement) => {
+  const openModalInViewMode = (fundingAgreement: FundingAgreement) => {
     setState({
-      selectedFundingAgreement:fundingAgreement,
-      isViewMode:true,
-      modalOpened: true
+      selectedFundingAgreement: fundingAgreement,
+      isViewMode: true,
+      modalOpened: true,
     });
   };
 
@@ -122,7 +123,8 @@ export const FundingAgreements: FunctionComponent<Props> = (props) => {
 
 
   const fundingActions = !viewMode ? [
-    <Button key="create-funding-agreement" onClick={() => openModalInEditMode(new FundingAgreement())} icon={<Currency/>} plain label={'Request funding'}/>,
+    <Button key="create-funding-agreement" onClick={() => openModalInEditMode(new FundingAgreement())}
+            icon={<Currency/>} plain label={'Request funding'}/>,
   ] : [];
 
 
@@ -138,7 +140,7 @@ export const FundingAgreements: FunctionComponent<Props> = (props) => {
       funder_id: fundingAgreement.funder_id.value,
       status: getFundingStatus(fundingAgreement),
       fee: fundingAgreement.fee.value,
-      nft_address: fundingAgreement.nft_address ? fundingAgreement.nft_address.value: '',
+      nft_address: fundingAgreement.nft_address ? fundingAgreement.nft_address.value : '',
       days: fundingAgreement.days.value,
       apr: fundingAgreement.apr.value,
     } as FundingAgreement;
@@ -156,7 +158,7 @@ export const FundingAgreements: FunctionComponent<Props> = (props) => {
     },
     {
       property: 'funder_id',
-      header: 'Funder Id',
+      header: 'Funder',
       render: datum => <DisplayField
         copy={true}
         as={'span'}
@@ -164,31 +166,31 @@ export const FundingAgreements: FunctionComponent<Props> = (props) => {
           href: getAddressLink(datum.funder_id),
           target: '_blank',
         }}
-        value={datum.funder_id}/>,
+        value={getContactByAddress(datum.funder_id, contacts).name}/>,
     },
     {
       property: 'amount',
-      header: 'Amount',
+      header: 'Finance amount',
       render: datum => {
         return formatCurrency(datum.amount, datum.currency);
       },
     },
     {
       property: 'repayment_amount',
-      header: 'Repayment Amount',
+      header: 'Repayment amount',
       render: datum => {
         return formatCurrency(datum.repayment_amount, datum.currency);
       },
     },
     {
       property: 'repayment_due_date',
-      header: 'Repayment Due Date',
+      header: 'Repayment due date',
       render: (datum => extractDate(datum.repayment_due_date)),
     },
 
     {
       property: 'fee',
-      header: 'Finance Fee',
+      header: 'Finance fee',
       render: datum => {
         return formatCurrency(datum.fee, datum.currency);
       },
@@ -230,7 +232,7 @@ export const FundingAgreements: FunctionComponent<Props> = (props) => {
       width={'large'}
       opened={modalOpened}
       headingProps={{ level: 3 }}
-      title={isViewMode ? `Funding Agreement`:`Request Funding`}
+      title={isViewMode ? `Funding Agreement` : `Request Funding`}
       onClose={closeModal}
     >
       <FundingRequestForm

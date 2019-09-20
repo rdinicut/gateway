@@ -12,6 +12,7 @@ import { Section } from '../components/Section';
 import Comments from './Comments';
 import Attributes from './Attributes';
 import { ViewModeFormContainer } from '../components/ViewModeFormContainer';
+import { getContactByAddress } from '../common/contact-utils';
 
 
 // TODO use function components here
@@ -173,19 +174,9 @@ export class DocumentForm extends React.Component<Props, State> {
       document.header.read_access = [];
     }
 
-    // Handle cent ids that are not in contacts
-    document.header.read_access.forEach(centId => {
-      if (!contacts.find(c => c.address!.toLowerCase() === centId.toLowerCase())) {
-        contacts.push({
-          name: centId,
-          address: centId,
-        });
-      }
-    });
-
 
     return (
-      <ViewModeFormContainer isViewMode={mode === 'view' ? 'view-mode-form':''}  pad={{ bottom: 'xlarge' }}>
+      <ViewModeFormContainer isViewMode={mode === 'view' ? 'view-mode-form' : ''} pad={{ bottom: 'xlarge' }}>
         <ResponsiveContext.Consumer>
           {size => {
             return <Formik
@@ -277,7 +268,7 @@ export class DocumentForm extends React.Component<Props, State> {
             options={contacts}
             value={
               get(values, 'header.read_access').map(v => {
-                return contacts.find(c => c.address!.toLowerCase() === v.toLowerCase());
+                return getContactByAddress(v, contacts);
               })
             }
             onChange={(selection) => {

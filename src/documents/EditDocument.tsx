@@ -20,6 +20,7 @@ import { NOTIFICATION, NotificationContext } from '../components/notifications/N
 import { AxiosError } from 'axios';
 import { FundingAgreements } from './FundingAgreements';
 import { Nfts } from './Nfts';
+import { extendContactsWithUsers } from '../common/contact-utils';
 
 type Props = RouteComponentProps<{ id: string }>;
 
@@ -148,6 +149,7 @@ const EditDocument: FunctionComponent<Props> = (props: Props) => {
   // Add mint action if schema has any registries defined
   const canMint = selectedSchema!.registries && selectedSchema!.registries.length > 0;
   const canFund = canWriteToDoc(user, document);
+  const extendedContacts = extendContactsWithUsers(contacts, [user!]);
 
   return (
     <>
@@ -155,7 +157,7 @@ const EditDocument: FunctionComponent<Props> = (props: Props) => {
         onSubmit={updateDocument}
         selectedSchema={selectedSchema}
         mode={'edit'}
-        contacts={contacts}
+        contacts={extendedContacts}
         document={document}
         schemas={schemas}
         renderHeader={() => {
@@ -199,7 +201,7 @@ const EditDocument: FunctionComponent<Props> = (props: Props) => {
           viewMode={!canFund}
           document={document!}
           user={user}
-          contacts={contacts}/>}
+          contacts={extendedContacts}/>}
       </DocumentForm>
     </>
   );

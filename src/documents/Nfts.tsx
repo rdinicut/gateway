@@ -100,7 +100,7 @@ export const Nfts: FunctionComponent<Props> = (props) => {
         columns={[
           {
             property: 'token_id',
-            header: 'Token id',
+            header: 'Token ID',
             render: datum => <DisplayField
               copy={true}
               as={'span'}

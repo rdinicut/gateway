@@ -25,7 +25,6 @@ const Register: FunctionComponent<Props> = (props: Props) => {
     }
   };
 
-  console.log('Render', user);
   if (user) {
     return <Redirect to={'/'}/>;
   }

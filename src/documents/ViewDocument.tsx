@@ -18,6 +18,7 @@ import DocumentForm from './DocumentForm';
 import { Preloader } from '../components/Preloader';
 import { Nfts } from './Nfts';
 import { FundingAgreements } from './FundingAgreements';
+import { extendContactsWithUsers } from '../common/contact-utils';
 
 
 type Props = RouteComponentProps<{ id: string }>
@@ -104,6 +105,8 @@ export const ViewDocument: FunctionComponent<Props> = (props: Props) => {
     );
   });
 
+  const extendedContacts = extendContactsWithUsers(contacts, [user!]);
+
 
   return (
 
@@ -135,7 +138,7 @@ export const ViewDocument: FunctionComponent<Props> = (props: Props) => {
         document={document}
         mode={'view'}
         schemas={schemas}
-        contacts={contacts}>
+        contacts={extendedContacts}>
 
         <Nfts
           viewMode={true}
@@ -146,7 +149,7 @@ export const ViewDocument: FunctionComponent<Props> = (props: Props) => {
           user={user}
           viewMode={true}
           document={document!}
-          contacts={contacts}/>}
+          contacts={extendedContacts}/>}
 
       </DocumentForm>
     </Box>

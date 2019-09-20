@@ -47,8 +47,6 @@ if (process.env.NODE_ENV === 'development') {
         user: response,
       };
 
-
-      console.log(window['__PRELOADED_STATE__']);
       const defaultStore = {
         user: {
           auth: {

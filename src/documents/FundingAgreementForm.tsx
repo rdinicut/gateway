@@ -9,6 +9,7 @@ import { NumberInput } from '@centrifuge/axis-number-input';
 import { DateInput } from '@centrifuge/axis-date-input';
 import { Contact } from '../common/models/contact';
 import { ViewModeFormContainer } from '../components/ViewModeFormContainer';
+import { getContactByAddress } from '../common/contact-utils';
 
 type Props = {
   onSubmit: (fundingRequest: FundingAgreement) => void;
@@ -60,7 +61,7 @@ export default class FundingRequestForm extends React.Component<Props> {
         .matches(/^0x/, 'must start with 0x')
         .length(66, 'must have 66 characters'),
       repayment_amount: Yup.number()
-        .moreThan(0,'Must be greater than 0')
+        .moreThan(0, 'Must be greater than 0')
         .required('This field is required'),
       apr: Yup.number()
         .required('This field is required'),
@@ -112,9 +113,6 @@ export default class FundingRequestForm extends React.Component<Props> {
               amount = repaymentAmount - financeFee;
 
 
-              console.log(financeRate, financeFee, feeAmount, amount, repaymentAmount, financeRate, days);
-              console.log(values);
-
               if (isNaN(amount)) amount = 0;
               if (isNaN(days)) days = 0;
               values.days = days.toString();
@@ -139,11 +137,7 @@ export default class FundingRequestForm extends React.Component<Props> {
                               labelKey={'name'}
                               valueKey={'address'}
                               options={contacts}
-                              value={
-                                contacts.find((c) => {
-                                  return c.address!.toLowerCase() === values!.funder_id.toLowerCase();
-                                })
-                              }
+                              value={getContactByAddress(values!.funder_id, contacts)}
                               onChange={(selected) => {
                                 setFieldValue('funder_id', selected.address);
                               }}
@@ -220,7 +214,7 @@ export default class FundingRequestForm extends React.Component<Props> {
 
                         <Box basis='1/2'>
                           <FormField
-                            label={`Early payment amount`}
+                            label={`Finance amount`}
                             error={errors!.amount}
                           >
                             <NumberInput
@@ -237,7 +231,7 @@ export default class FundingRequestForm extends React.Component<Props> {
                       <Box direction="row" gap={columnGap}>
                         <Box basis='1/2'>
                           <FormField
-                            label="Early payment date"
+                            label="Funding date"
                           >
                             <DateInput
                               disabled={true}
@@ -268,7 +262,7 @@ export default class FundingRequestForm extends React.Component<Props> {
                     </Box>
                     <Box gap={columnGap}>
                       <FormField
-                        label="NFT Token ID"
+                        label="NFT token ID"
                         error={errors!.nft_address}
                       >
 

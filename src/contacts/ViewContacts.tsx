@@ -5,6 +5,7 @@ import { Preloader } from '../components/Preloader';
 import { httpClient } from '../http-client';
 import { AppContext } from '../App';
 import { useMergeState } from '../hooks';
+import { PageError } from '../components/PageError';
 
 type State  = {
   loading: boolean,
@@ -86,9 +87,7 @@ const ViewContacts: FunctionComponent = () => {
     return <Preloader message="Loading"/>;
   }
 
-  if (error) {
-    console.log('error', error);
-  }
+  if (error) return <PageError error={error}/>;
 
   return (
     <ContactList
