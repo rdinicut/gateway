@@ -4,15 +4,13 @@ import { Link } from 'react-router-dom';
 import DocumentForm from './DocumentForm';
 import { Redirect, RouteComponentProps, withRouter } from 'react-router';
 import { Box, Button, Heading } from 'grommet';
-import { LinkPrevious, Money } from 'grommet-icons';
+import { LinkPrevious } from 'grommet-icons';
 import { canWriteToDoc } from '../common/models/user';
 import { Preloader } from '../components/Preloader';
 import { Document } from '../common/models/document';
 import { SecondaryHeader } from '../components/SecondaryHeader';
 import { Schema } from '../common/models/schema';
 import { Contact } from '../common/models/contact';
-import { Modal } from '@centrifuge/axis-modal';
-import MintNftForm, { MintNftFormData } from './MintNftForm';
 import { httpClient } from '../http-client';
 import { AppContext } from '../App';
 import { useMergeState } from '../hooks';
@@ -20,13 +18,14 @@ import { PageError } from '../components/PageError';
 import documentRoutes from './routes';
 import { NOTIFICATION, NotificationContext } from '../components/notifications/NotificationContext';
 import { AxiosError } from 'axios';
+import { FundingAgreements } from './FundingAgreements';
+import { Nfts } from './Nfts';
 
 type Props = RouteComponentProps<{ id: string }>;
 
 
 type State = {
   loadingMessage: string | null
-  mintingOpened: boolean;
   document?: Document;
   schemas: Schema[];
   contacts: Contact[];
@@ -49,12 +48,10 @@ const EditDocument: FunctionComponent<Props> = (props: Props) => {
       contacts,
       document,
       schemas,
-      mintingOpened,
       error,
     },
     setState] = useMergeState<State>({
     loadingMessage: 'Loading',
-    mintingOpened: false,
     schemas: [],
     contacts: [],
   });
@@ -63,14 +60,14 @@ const EditDocument: FunctionComponent<Props> = (props: Props) => {
   const notification = useContext(NotificationContext);
 
 
-  const handleHttpClientError = useCallback((error) => {
+  const displayPageError = useCallback((error) => {
     setState({
       loadingMessage: null,
       error,
     });
   }, [setState]);
 
-  const loadData = useCallback(async (id: string) => {
+  const loadData = useCallback(async () => {
     setState({
       loadingMessage: 'Loading',
     });
@@ -86,14 +83,14 @@ const EditDocument: FunctionComponent<Props> = (props: Props) => {
       });
 
     } catch (e) {
-      handleHttpClientError(e);
+      displayPageError(e);
     }
-  }, [setState, handleHttpClientError]);
+  }, [id, setState, displayPageError]);
 
 
   useEffect(() => {
-    loadData(id);
-  }, [id, loadData]);
+    loadData();
+  }, [loadData]);
 
 
   const updateDocument = async (newDoc: Document) => {
@@ -107,80 +104,35 @@ const EditDocument: FunctionComponent<Props> = (props: Props) => {
         document,
       });
     } catch (e) {
-      setState({
-        loadingMessage: null,
-      });
-
-
-      notification.alert({
-        type: NOTIFICATION.ERROR,
-        title: ' Failed to update document',
-        message: (e as AxiosError)!.response!.data.message,
-      });
+      displayModalError(e, 'Failed to update document');
     }
 
   };
 
-  const mintNFT = async (id: string | undefined, data: MintNftFormData) => {
+  const startLoading = (loadingMessage: string = 'Loading') => {
+    setState({ loadingMessage });
+  };
 
+  const displayModalError = (e: AxiosError, title: string = 'Error') => {
     setState({
-      loadingMessage: 'Minting NFT',
-      mintingOpened: false,
+      loadingMessage: null,
     });
-
-    try {
-      const document = (await httpClient.documents.mint(
-        id,
-        {
-          deposit_address: data.transfer ? data.deposit_address : user!.account,
-          proof_fields: data.registry!.proofs,
-          registry_address: data.registry!.address,
-        },
-      )).data;
-
-      setState({
-        loadingMessage: null,
-        document,
-      });
-
-    } catch (e) {
-      setState({
-        loadingMessage: null,
-      });
-
-      notification.alert({
-        type: NOTIFICATION.ERROR,
-        title: ' Failed to mint NFT',
-        message: (e as AxiosError)!.response!.data.message,
-      });
-    }
+    notification.alert({
+      type: NOTIFICATION.ERROR,
+      title,
+      message: e!.response!.data.message,
+    });
   };
 
-
-  const openMintModal = () => {
-    setState({ mintingOpened: true });
-  };
-
-  const closeMintModal = () => {
-    setState({ mintingOpened: false });
-  };
 
   const onCancel = () => {
     props.history.goBack();
   };
 
 
-  if (loadingMessage) {
-    return <Preloader message={loadingMessage}/>;
-  }
-
-  if (error)
-    return <PageError error={error}/>;
-
-  // Redirect to view in case the user can not edit this document
-  if (!canWriteToDoc(user!, document)) {
-    return <Redirect to={documentRoutes.view.replace(':id', id)}/>;
-  }
+  if (loadingMessage) return <Preloader message={loadingMessage}/>;
+  if (error) return <PageError error={error}/>;
+  if (!canWriteToDoc(user!, document)) return <Redirect to={documentRoutes.view.replace(':id', id)}/>;
 
   const selectedSchema: Schema | undefined = schemas.find(s => {
     return (
@@ -190,30 +142,15 @@ const EditDocument: FunctionComponent<Props> = (props: Props) => {
       s.name === document.attributes._schema.value
     );
   });
-
-  if (!selectedSchema) return <p>Unsupported schema</p>;
+  // Redirect to view when the user can not edit this document
+  if (!selectedSchema) return <PageError error={new Error('Can not find schema definition for document')}/>;
 
   // Add mint action if schema has any registries defined
-  const mintActions = selectedSchema.registries && selectedSchema.registries.length > 0 ? [
-      <Button key="mint_nft" onClick={openMintModal} icon={<Money/>} plain label={'Mint NFT'}/>,
-    ] : []
-  ;
+  const canMint = selectedSchema!.registries && selectedSchema!.registries.length > 0;
+  const canFund = canWriteToDoc(user, document);
+
   return (
     <>
-      <Modal
-        width={'large'}
-        opened={mintingOpened}
-        headingProps={{ level: 3 }}
-        title={`Mint NFT`}
-        onClose={closeMintModal}
-      >
-        <MintNftForm
-          onSubmit={(data) => mintNFT(document!._id, data)}
-          onDiscard={closeMintModal}
-          registries={selectedSchema.registries}
-        />
-      </Modal>
-
       <DocumentForm
         onSubmit={updateDocument}
         selectedSchema={selectedSchema}
@@ -221,31 +158,48 @@ const EditDocument: FunctionComponent<Props> = (props: Props) => {
         contacts={contacts}
         document={document}
         schemas={schemas}
-        mintActions={mintActions}
+        renderHeader={() => {
+          return <SecondaryHeader>
+            <Box direction="row" gap="small" align="center">
+              <Link to={documentRoutes.index} size="large">
+                <LinkPrevious/>
+              </Link>
+              <Heading level="3">
+                {'Update Document'}
+              </Heading>
+            </Box>
+
+            <Box direction="row" gap="medium">
+              <Button
+                onClick={onCancel}
+                label="Discard"
+              />
+              <Button
+                type="submit"
+                primary
+                label="Update"
+              />
+
+            </Box>
+          </SecondaryHeader>;
+        }}
       >
-        <SecondaryHeader>
-          <Box direction="row" gap="small" align="center">
-            <Link to={documentRoutes.index} size="large">
-              <LinkPrevious/>
-            </Link>
-            <Heading level="3">
-              {'Update Document'}
-            </Heading>
-          </Box>
+        <Nfts
+          onAsyncStart={startLoading}
+          onAsyncComplete={loadData}
+          onAsyncError={displayModalError}
+          viewMode={!canMint}
+          document={document!}
+          registries={selectedSchema!.registries}/>
 
-          <Box direction="row" gap="medium">
-            <Button
-              onClick={onCancel}
-              label="Discard"
-            />
-            <Button
-              type="submit"
-              primary
-              label="Update"
-            />
-
-          </Box>
-        </SecondaryHeader>
+        {(selectedSchema!.formFeatures && selectedSchema!.formFeatures!.fundingAgreement) && <FundingAgreements
+          onAsyncStart={startLoading}
+          onAsyncComplete={loadData}
+          onAsyncError={displayModalError}
+          viewMode={!canFund}
+          document={document!}
+          user={user}
+          contacts={contacts}/>}
       </DocumentForm>
     </>
   );

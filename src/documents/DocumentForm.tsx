@@ -1,8 +1,5 @@
 import React from 'react';
-import { Box, DataTable, FormField, Grid, Paragraph, ResponsiveContext, TextArea } from 'grommet';
-import { StyledSelect } from 'grommet/components/Select/StyledSelect';
-import { StyledTextInput } from 'grommet/components/TextInput/StyledTextInput';
-import { StyledTextArea } from 'grommet/components/TextArea/StyledTextArea';
+import { Box, FormField, Grid, ResponsiveContext } from 'grommet';
 import { Formik } from 'formik';
 import { get } from 'lodash';
 import * as Yup from 'yup';
@@ -12,36 +9,20 @@ import { SearchSelect } from '@centrifuge/axis-search-select';
 import { Contact } from '../common/models/contact';
 import { MultipleSelect } from '@centrifuge/axis-multiple-select';
 import { Section } from '../components/Section';
-import styled from 'styled-components';
-import { DisplayField } from '@centrifuge/axis-display-field';
-import AttributeField from './AttributeField';
-import { getNFTLink, getAddressLink } from '../common/etherscan';
-
-// improve visibility of inputs in view mode
-const StyledFormContainer = styled(Box)`
-  ${StyledTextInput}, ${StyledTextArea}, input[type="text"], textarea, ${StyledSelect} button {
-       ${props => {
-  if (props.mode === 'view')
-    return ` svg {
-                    opacity: 0;
-                    }
-                    cursor:default;
-                    opacity: 1;`;
-}}
-  }  
- `;
+import Comments from './Comments';
+import Attributes from './Attributes';
+import { ViewModeFormContainer } from '../components/ViewModeFormContainer';
 
 
 // TODO use function components here
 type Props = {
   onSubmit?: (document: Document) => void;
+  renderHeader: () => JSX.Element;
   contacts: Contact[];
   schemas?: Schema[],
   mode?: 'edit' | 'view' | 'create',
-  editMode?: boolean,
   document: Document
   selectedSchema?: Schema;
-  mintActions?: JSX.Element[];
 };
 
 type State = {
@@ -58,6 +39,7 @@ export class DocumentForm extends React.Component<Props, State> {
     onSubmit: () => {
       // do nothing
     },
+    renderHeader: () => <></>,
     schemas: [],
     mode: 'create',
     document: {
@@ -165,8 +147,8 @@ export class DocumentForm extends React.Component<Props, State> {
 
   render() {
 
-    const { submitted, selectedSchema, sectionGap } = this.state;
-    const { document, mode, contacts } = this.props;
+    const { submitted, selectedSchema, sectionGap, columnGap } = this.state;
+    const { document, mode, contacts, children, renderHeader } = this.props;
     const isViewMode = mode === 'view';
     const isEditMode = mode === 'edit';
     const { validationSchema, defaultValues } = this.generateValidationSchema(selectedSchema);
@@ -203,7 +185,7 @@ export class DocumentForm extends React.Component<Props, State> {
 
 
     return (
-      <StyledFormContainer mode={mode} pad={{ bottom: 'xlarge' }}>
+      <ViewModeFormContainer isViewMode={mode === 'view' ? 'view-mode-form':''}  pad={{ bottom: 'xlarge' }}>
         <ResponsiveContext.Consumer>
           {size => {
             return <Formik
@@ -232,7 +214,7 @@ export class DocumentForm extends React.Component<Props, State> {
                     }}
                   >
                     <Box gap={sectionGap}>
-                      {this.props.children}
+                      {renderHeader()}
 
                       {this.renderDetailsSection(
                         values,
@@ -243,25 +225,12 @@ export class DocumentForm extends React.Component<Props, State> {
                         isEditMode,
                       )}
 
-                      {(isEditMode || isViewMode) && this.renderNftSection()}
+                      {children}
 
                       {selectedSchema && <>
-                        {this.renderAttributesSections(
-                          values,
-                          errors,
-                          handleChange,
-                          setFieldValue,
-                          isViewMode,
-                          isEditMode,
-                          size,
-                        )}
-                        {(selectedSchema.formFeatures && selectedSchema.formFeatures.comments) && this.renderCommentsSection(
-                          values,
-                          errors,
-                          handleChange,
-                          setFieldValue,
-                          isViewMode,
-                        )}
+                        <Attributes columnGap={columnGap} schema={selectedSchema} isViewMode={isViewMode} size={size}/>
+                        {(selectedSchema.formFeatures && selectedSchema.formFeatures.comments) &&
+                        <Comments columnGap={columnGap} isViewMode={isViewMode}/>}
                       </>}
 
                     </Box>
@@ -272,28 +241,9 @@ export class DocumentForm extends React.Component<Props, State> {
           }}
         </ResponsiveContext.Consumer>
 
-      </StyledFormContainer>
+      </ViewModeFormContainer>
     );
   }
-
-
-  getSectionGridProps = (size) => {
-    const { selectedSchema: { formFeatures } } = this.state;
-
-    let numOfRows = (formFeatures && formFeatures.columnNo) ? formFeatures.columnNo : 1;
-    switch (size) {
-      case 'medium':
-        numOfRows = Math.min(4, numOfRows);
-        break;
-      case 'small':
-        numOfRows = 1;
-
-    }
-    return {
-      gap: this.state.columnGap,
-      style: { gridTemplateColumns: `repeat(${numOfRows}, 1fr)` },
-    };
-  };
 
 
   renderDetailsSection = (values, errors, handleChange, setFieldValue, isViewMode, isEditMode) => {
@@ -339,106 +289,6 @@ export class DocumentForm extends React.Component<Props, State> {
     </Section>;
   };
 
-  renderCommentsSection = (values, errors, handleChange, setFieldValue, isViewMode) => {
-    const { columnGap } = this.state;
-    const key = `attributes.comments.value`;
-    return <Section title="Comments">
-      <Grid gap={columnGap}>
-        <FormField
-          key={key}
-          error={get(errors, key)}
-        >
-          <TextArea
-            disabled={isViewMode}
-            value={get(values, key)}
-            name={`${key}`}
-            onChange={handleChange}
-          />
-        </FormField>
-      </Grid>
-    </Section>;
-  };
-
-
-  renderNftSection = () => {
-
-    const { mintActions, document } = this.props;
-
-    return (<Section
-      title="NFTs"
-      actions={mintActions}
-    >
-
-      <DataTable
-        size={'100%'}
-        sortable={false}
-        data={document!.header!.nfts || []}
-        primaryKey={'token_id'}
-        columns={[
-          {
-            property: 'token_id',
-            header: 'Token id',
-            render: datum => <DisplayField
-              link={{
-                href:getNFTLink(datum.token_id,datum.registry),
-                target:'_blank'
-              }}
-              value={datum.token_id}/>,
-          },
-
-          {
-            property: 'registry',
-            header: 'Registry',
-            render: datum => <DisplayField
-              link={{
-                href:getAddressLink(datum.registry),
-                target:'_blank'
-              }}
-              value={datum.registry}/>,
-          },
-
-          {
-            property: 'owner',
-            header: 'Owner',
-            render: datum => <DisplayField
-              link={{
-                href:getAddressLink(datum.owner),
-                target:'_blank'
-              }}
-              value={datum.owner}/>,
-
-          },
-        ]}
-      />
-
-      {!document!.header!.nfts &&
-      <Paragraph color={'dark-2'}>There are no NFTs minted on this document yet.</Paragraph>}
-    </Section>);
-  };
-
-  renderAttributesSections = (values, errors, handleChange, setFieldValue, isViewMode, isEditMode, size) => {
-
-    const { selectedSchema: { formFeatures, attributes } } = this.state;
-    const defaultSectionName = formFeatures && formFeatures.defaultSection ? formFeatures.defaultSection : 'Attributes';
-    const sections = {};
-    // Group in sections
-    attributes.forEach((attr) => {
-      const sectionName = attr.section || defaultSectionName;
-      if (!sections[sectionName]) sections[sectionName] = [];
-      sections[sectionName].push(
-        <AttributeField key={attr.name} attr={attr} isViewMode={isViewMode}/>,
-      );
-    });
-
-    return Object.keys(sections).map(name => {
-      return <Section title={name}>
-        <Grid {...this.getSectionGridProps(size)}>
-          {sections[name]}
-        </Grid>
-      </Section>;
-    });
-
-  };
 
 };
 

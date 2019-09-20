@@ -54,7 +54,7 @@ export const CreateDocument: FunctionComponent<Props> = (props) => {
   const { user } = useContext(AppContext);
 
 
-  const handleHttpClientError = useCallback((error) => {
+  const displayPageError = useCallback((error) => {
     setState({
       loadingMessage: null,
       error,
@@ -75,9 +75,9 @@ export const CreateDocument: FunctionComponent<Props> = (props) => {
       });
 
     } catch (e) {
-      handleHttpClientError(e);
+      displayPageError(e);
     }
-  }, [setState, handleHttpClientError]);
+  }, [setState, displayPageError]);
 
   useEffect(() => {
     loadData();
@@ -137,30 +137,33 @@ export const CreateDocument: FunctionComponent<Props> = (props) => {
       schemas={availableSchemas}
       onSubmit={createDocument}
       contacts={contacts}
+      renderHeader={() => {
+        return <SecondaryHeader>
+          <Box direction="row" gap="small" align="center">
+            <Link to={documentRoutes.index} size="large">
+              <LinkPrevious/>
+            </Link>
+            <Heading level="3">
+              {'New Document'}
+            </Heading>
+          </Box>
+
+          <Box direction="row" gap="medium">
+            <Button
+              onClick={onCancel}
+              label="Discard"
+            />
+
+            <Button
+              type="submit"
+              primary
+              label="Save"
+            />
+          </Box>
+        </SecondaryHeader>
+      }}
     >
-      <SecondaryHeader>
-        <Box direction="row" gap="small" align="center">
-          <Link to={documentRoutes.index} size="large">
-            <LinkPrevious/>
-          </Link>
-          <Heading level="3">
-            {'New Document'}
-          </Heading>
-        </Box>
 
-        <Box direction="row" gap="medium">
-          <Button
-            onClick={onCancel}
-            label="Discard"
-          />
-
-          <Button
-            type="submit"
-            primary
-            label="Save"
-          />
-        </Box>
-      </SecondaryHeader>
     </DocumentForm>
   );
 
