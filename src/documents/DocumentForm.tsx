@@ -149,7 +149,7 @@ export class DocumentForm extends React.Component<Props, State> {
   render() {
 
     const { submitted, selectedSchema, sectionGap, columnGap } = this.state;
-    const { document, mode, contacts, children, renderHeader } = this.props;
+    const { document, mode, children, renderHeader } = this.props;
     const isViewMode = mode === 'view';
     const isEditMode = mode === 'edit';
     const { validationSchema, defaultValues } = this.generateValidationSchema(selectedSchema);
@@ -236,7 +236,7 @@ export class DocumentForm extends React.Component<Props, State> {
     );
   }
 
-
+  // TODO move this to own component
   renderDetailsSection = (values, errors, handleChange, setFieldValue, isViewMode, isEditMode) => {
     const { selectedSchema, columnGap } = this.state;
     const { contacts, schemas } = this.props;
