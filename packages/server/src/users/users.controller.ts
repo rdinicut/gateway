@@ -98,9 +98,16 @@ export class UsersController {
 
     return this.upsertUser({
       ...user,
-      name: user.name,
+      name: user.name!,
       email: user.email,
       account: '',
+      chain: {
+        centrifuge_chain_account: {
+          id: '',
+          secret: '',
+          ss_58_address: '',
+        },
+      },
       password: undefined,
       enabled: false,
       invited: true,
@@ -136,13 +143,15 @@ export class UsersController {
     );
   }
 
+  // TODO: make this work
   private async upsertUser(user: User, id: string = '') {
     // Create centrifuge identity in case user does not have one
     if (!user.account) {
       const account = await this.centrifugeService.accounts.generateAccount(
-        config.admin.account,
+          // @ts-ignore
+          config.admin.chain,
       );
-      user.account = account.identity_id.toLowerCase();
+      user.account = account.identityId.toLowerCase();
     }
 
     // Hash Password, and invited one should not have a password
