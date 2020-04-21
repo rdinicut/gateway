@@ -50,7 +50,8 @@ export class DocumentsController {
 
     const createAttributes = unflatten(createResult.attributes);
     createResult.attributes = createAttributes;
-
+    // @ts-ignore
+    await this.centrifugeService.pullForJobComplete(createResult.header.job_id, request.user.account);
     const commitResult = await this.centrifugeService.documents.commitDocumentV2(
         request.user.account,
         // @ts-ignore
@@ -93,7 +94,8 @@ export class DocumentsController {
     });
 
     if (!document) throw new NotFoundException('Document not found');
-    const docFromNode = await this.centrifugeService.documents.getDocument(request.user.account, document.header.documentId);
+    // @ts-ignore
+    const docFromNode = await this.centrifugeService.documents.getDocument(request.user.account, document.header.document_id);
     return {
       _id: document._id,
       ...docFromNode,
@@ -130,7 +132,8 @@ export class DocumentsController {
 
     const updateResult: Document = await this.centrifugeService.documents.updateDocument(
       request.user.account,
-      documentFromDb.header.documentId,
+        // @ts-ignore
+        documentFromDb.header.document_id,
       {
         attributes: document.attributes,
         readAccess: document.header.readAccess,
@@ -139,7 +142,8 @@ export class DocumentsController {
       },
     );
 
-    await this.centrifugeService.pullForJobComplete(updateResult.header.jobId, request.user.account);
+    // @ts-ignore
+    await this.centrifugeService.pullForJobComplete(updateResult.header.job_id, request.user.account);
     const unflattenAttr = unflatten(updateResult.attributes);
 
     return await this.databaseService.documents.updateById(params.id, {
