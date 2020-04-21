@@ -85,7 +85,7 @@ let UsersController = class UsersController {
             if (userExists) {
                 throw new common_1.ForbiddenException('User already invited!');
             }
-            return this.upsertUser(Object.assign({}, user, { name: user.name, email: user.email, account: '', password: undefined, enabled: false, invited: true, schemas: user.schemas, permissions: user.permissions }));
+            return this.upsertUser(Object.assign({}, user, { name: user.name, email: user.email, account: undefined, chain: undefined, password: undefined, enabled: false, invited: true, schemas: user.schemas, permissions: user.permissions }));
         });
     }
     update(user) {
@@ -112,8 +112,8 @@ let UsersController = class UsersController {
     upsertUser(user, id = '') {
         return __awaiter(this, void 0, void 0, function* () {
             if (!user.account) {
-                const account = yield this.centrifugeService.accounts.generateAccount(config_1.default.admin.chainAccount);
-                user.account = account.identityId.toLowerCase();
+                const account = yield this.centrifugeService.accounts.generateAccount(config_1.default.admin.chain);
+                user.account = account.identity_id.toLowerCase();
             }
             if (user.password) {
                 user.password = yield util_1.promisify(bcrypt.hash)(user.password, 10);
