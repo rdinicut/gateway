@@ -144,7 +144,8 @@ export class UsersController {
           // @ts-ignore
           config.admin.chain,
       );
-      user.account = account.identityId.toLowerCase();
+      // @ts-ignore
+      user.account = account.identity_id.toLowerCase();
     }
 
     // Hash Password, and invited one should not have a password
