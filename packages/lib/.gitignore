@@ -61,8 +61,8 @@ typings/
 .next
 
 #  build files
-models	build
-centrifuge-node-client	dist
+models
+centrifuge-node-client
 utils
 !src/centrifuge-node-client
 !src/models
