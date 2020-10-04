@@ -59,7 +59,7 @@ export class DatabaseRepository<T> {
    * @returns {Promise<T|null>} promise
    */
   updateById(
-    id: string,
+    id: string | undefined,
     updateObject: Modifier<T> | T,
     upsert: boolean = false,
   ): Promise<T | null> {

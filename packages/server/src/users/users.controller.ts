@@ -14,12 +14,13 @@ import {
 import * as bcrypt from 'bcrypt';
 import { promisify } from 'util';
 import { ROUTES } from '@centrifuge/gateway-lib/utils/constants';
-import { User } from '@centrifuge/gateway-lib/models/user';
+import { User, UserWithOrg } from '@centrifuge/gateway-lib/models/user';
 import { DatabaseService } from '../database/database.service';
 import config from '../config';
 import { CentrifugeService } from '../centrifuge-client/centrifuge.service';
 import { UserAuthGuard } from '../auth/admin.auth.guard';
 import { isPasswordValid } from '@centrifuge/gateway-lib/utils/validators';
+import { Organization } from '@centrifuge/gateway-lib/models/organization';
 
 @Controller()
 export class UsersController {
@@ -67,7 +68,7 @@ export class UsersController {
             password: user.password,
             enabled: true,
           },
-          existingUser._id,
+          false,
         );
       } else {
         throw new ForbiddenException('Email taken!');
@@ -77,12 +78,15 @@ export class UsersController {
         throw new ForbiddenException('Email taken!');
       }
 
-      return this.upsertUser({
-        ...user,
-        email: user.email.toLocaleLowerCase(),
-        enabled: true,
-        invited: false,
-      });
+      return this.upsertUser(
+        {
+          ...user,
+          email: user.email.toLocaleLowerCase(),
+          enabled: true,
+          invited: false,
+        },
+        false,
+      );
     }
   }
 
@@ -100,18 +104,21 @@ export class UsersController {
       throw new ForbiddenException('User already invited!');
     }
 
-    return this.upsertUser({
-      ...user,
-      name: user.name!,
-      email: user.email.toLocaleLowerCase(),
-      account: undefined,
-      chain: undefined,
-      password: undefined,
-      enabled: false,
-      invited: true,
-      schemas: user.schemas,
-      permissions: user.permissions,
-    });
+    return this.upsertUser(
+      {
+        ...user,
+        name: user.name!,
+        email: user.email.toLowerCase(),
+        account: user.account,
+        chain: undefined,
+        password: undefined,
+        enabled: false,
+        invited: true,
+        schemas: user.schemas,
+        permissions: user.permissions,
+      },
+      true,
+    );
   }
 
   @Put(ROUTES.USERS.base)
@@ -128,23 +135,26 @@ export class UsersController {
       throw new ForbiddenException('Email taken!');
     }
 
-    return await this.databaseService.users.updateById(user._id, {
-      $set: {
-        name: user.name.toLocaleLowerCase(),
-        email: user.email,
-        permissions: user.permissions,
-        schemas: user.schemas,
-      },
-    });
+    return await this.upsertUser(user, false);
   }
 
-  private async upsertUser(user: User, id: string = '') {
+  private async upsertUser(user: UserWithOrg, upsert: boolean = false) {
     // Create centrifuge identity in case user does not have one
     if (!user.account) {
-      const account = await this.centrifugeService.accounts.generateAccount(
+      if (!user.organizationName) {
+        throw new ForbiddenException('Organization name is mandatory!');
+      }
+      const generatedAccount = await this.centrifugeService.accounts.generateAccount(
         config.admin.chain,
       );
-      user.account = account.identity_id.toLowerCase();
+
+      const newOrg = new Organization(
+        user.organizationName,
+        generatedAccount.identity_id.toLowerCase(),
+      );
+      await this.databaseService.organizations.insert(newOrg);
+      delete user.organizationName;
+      user.account = newOrg.account;
     }
 
     // Hash Password, and invited one should not have a password
@@ -152,9 +162,9 @@ export class UsersController {
       user.password = await promisify(bcrypt.hash)(user.password, 10);
     }
     const result: User = await this.databaseService.users.updateById(
-      id,
+      user._id,
       user,
-      true,
+      upsert,
     );
     return result;
   }
