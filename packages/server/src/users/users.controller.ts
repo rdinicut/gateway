@@ -77,7 +77,6 @@ export class UsersController {
       if (existingUser) {
         throw new ForbiddenException('Email taken!');
       }
-
       return this.upsertUser(
         {
           ...user,
@@ -85,7 +84,7 @@ export class UsersController {
           enabled: true,
           invited: false,
         },
-        false,
+        true,
       );
     }
   }
@@ -150,6 +149,7 @@ export class UsersController {
 
       const newOrg = new Organization(
         user.organizationName,
+        // @ts-ignore
         generatedAccount.identity_id.toLowerCase(),
       );
       await this.databaseService.organizations.insert(newOrg);
