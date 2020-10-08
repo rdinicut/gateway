@@ -14,8 +14,8 @@ describe('DocumentsController', () => {
   let documentsModule: TestingModule;
   const documentToCreate: Document = {
     header: {
-      readAccess: ['0x111'],
-      writeAccess: ['0x222'],
+      read_access: ['0x111'],
+      write_access: ['0x222'],
     },
     attributes: {
       animal_type: {
@@ -35,8 +35,8 @@ describe('DocumentsController', () => {
 
   const documentToInsert: Document = {
     header: {
-      readAccess: ['0x111'],
-      writeAccess: ['0x222'],
+      read_access: ['0x111'],
+      write_access: ['0x222'],
     },
     attributes: {
       animal_type: {
@@ -71,7 +71,7 @@ describe('DocumentsController', () => {
     const databaseService = documentsModule.get<DatabaseService>(DatabaseService);
     insertedDocument = await databaseService.documents.insert({
       header: {
-        documentId: '0x39393939',
+        document_id: '0x39393939',
       },
       ...documentToInsert,
       ownerId: 'user_id',

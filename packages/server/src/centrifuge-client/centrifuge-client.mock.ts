@@ -78,7 +78,7 @@ export class MockCentrifugeService {
           },
           data: {
             funding: {
-              agreementId: 'e444',
+              agreement_id: 'e444',
               ...payload.data,
             },
           },
@@ -108,7 +108,7 @@ export class MockCentrifugeService {
       };
 
     }),
-    signFundingAgreement: jest.fn((account,document_id, agreementId, ) => {
+    signFundingAgreement: jest.fn((account,document_id, agreement_id, ) => {
       return new Promise((resolve, reject) => {
         const result = {
           header: {
@@ -122,7 +122,7 @@ export class MockCentrifugeService {
           },
           data: {
             funding: {
-              agreementId,
+              agreement_id,
             },
             signatures: ['signature_data_1'],
           },

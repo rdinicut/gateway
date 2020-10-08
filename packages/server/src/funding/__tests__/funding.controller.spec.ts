@@ -33,7 +33,7 @@ describe('Funding controller', () => {
     const databaseService = fundingModule.get<DatabaseService>(DatabaseService);
     insertedInvoice = await databaseService.documents.insert({
       header: {
-        documentId: '0x39393939',
+        document_id: '0x39393939',
       },
       data: { ...invoice },
       ownerId: 'user_id',
@@ -47,7 +47,7 @@ describe('Funding controller', () => {
       const fundingRequest = {
         document_id: '0x39393939',
         funder_id: 'funder',
-        agreementId: 'agreement_id',
+        agreement_id: 'agreement_id',
         amount: '0',
         invoice_amount: '0',
         days: '0',
@@ -80,7 +80,7 @@ describe('Funding controller', () => {
         },
         data: {
           funding: {
-            agreementId: 'e444',
+            agreement_id: 'e444',
           },
           signatures: ['signature_data_1'],
         },
@@ -117,7 +117,7 @@ describe('Funding controller', () => {
         },
         data: {
           funding: {
-            agreementId: fundingRequest.agreement_id,
+            agreement_id: fundingRequest.agreement_id,
           },
           signatures: ['signature_data_1'],
         },
