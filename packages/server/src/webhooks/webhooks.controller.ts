@@ -61,6 +61,7 @@ export class WebhooksController {
             },
             {
               $set: {
+                ownerId: user._id,
                 organizationId: user.account,
                 header: result.header,
                 data: result.data,
