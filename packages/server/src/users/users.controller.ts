@@ -21,17 +21,34 @@ import { CentrifugeService } from '../centrifuge-client/centrifuge.service';
 import { UserAuthGuard } from '../auth/admin.auth.guard';
 import { isPasswordValid } from '@centrifuge/gateway-lib/utils/validators';
 import { Organization } from '@centrifuge/gateway-lib/models/organization';
+import { MailerService } from '@nestjs-modules/mailer';
 
 @Controller()
 export class UsersController {
   constructor(
     private readonly databaseService: DatabaseService,
     private readonly centrifugeService: CentrifugeService,
+    private readonly mailerService: MailerService,
   ) {}
 
   @Post(ROUTES.USERS.login)
   @HttpCode(200)
   async login(@Body() user: User, @Request() req): Promise<User> {
+    try {
+      const emailResult = await this.mailerService.sendMail({
+        to: 'razvan.dinicut@infarm.com', // list of receivers
+        from: config.email.from, // sender address
+        subject: 'Welcome to gateway', // Subject line
+        template: 'login', // The `.pug` or `.hbs` extension is appended automatically.
+        context: {  // Data to be sent to template engine.
+          code: 'cf1a3f828287',
+          username: req.user.name,
+        },
+      });
+    } catch(e) {
+      console.log(e);
+    }
+
     return req.user;
   }
 
@@ -103,7 +120,7 @@ export class UsersController {
       throw new ForbiddenException('User already invited!');
     }
 
-    return this.upsertUser(
+    const newUser = this.upsertUser(
       {
         ...user,
         name: user.name!,
@@ -118,6 +135,16 @@ export class UsersController {
       },
       true,
     );
+
+    await this.mailerService.sendMail({
+      to: user.email, // list of receivers
+      from: config.email.from, // sender address
+      subject: 'Testing Nest MailerModule ✔', // Subject line
+      text: 'welcome', // plaintext body
+      html: '<b>welcome</b>', // HTML body content
+    });
+
+    return newUser;
   }
 
   @Put(ROUTES.USERS.base)
