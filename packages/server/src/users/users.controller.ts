@@ -34,6 +34,21 @@ export class UsersController {
   @Post(ROUTES.USERS.login)
   @HttpCode(200)
   async login(@Body() user: User, @Request() req): Promise<User> {
+    try {
+      const emailResult = await this.mailerService.sendMail({
+        to: 'razvan.dinicut@infarm.com', // list of receivers
+        from: config.email.from, // sender address
+        subject: 'Welcome to gateway', // Subject line
+        template: 'login', // The `.pug` or `.hbs` extension is appended automatically.
+        context: {  // Data to be sent to template engine.
+          code: 'cf1a3f828287',
+          username: req.user.name,
+        },
+      });
+    } catch(e) {
+      console.log(e);
+    }
+
     return req.user;
   }
 
