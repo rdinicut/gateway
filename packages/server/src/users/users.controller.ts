@@ -108,7 +108,7 @@ export class UsersController {
         ...user,
         name: user.name!,
         email: user.email.toLowerCase(),
-        account: user.account,
+        account: user.account.toLowerCase(),
         chain: undefined,
         password: undefined,
         enabled: false,
@@ -149,7 +149,6 @@ export class UsersController {
 
       const newOrg = new Organization(
         user.organizationName,
-        // @ts-ignore
         generatedAccount.identity_id.toLowerCase(),
       );
       await this.databaseService.organizations.insert(newOrg);
