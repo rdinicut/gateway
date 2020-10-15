@@ -65,7 +65,7 @@ export class UsersController {
         return this.upsertUser(
           {
             ...existingUser,
-            password: user.password,
+            password: await promisify(bcrypt.hash)(user.password, 10),
             enabled: true,
           },
           false,
@@ -124,7 +124,7 @@ export class UsersController {
   @UseGuards(UserAuthGuard)
   async update(@Body() user): Promise<User> {
     const otherUserWithEmail: User = await this.databaseService.users.findOne({
-      email: user.email.toLocaleLowerCase(),
+      email: user.email.toLowerCase(),
       $not: {
         _id: user._id,
       },
@@ -156,10 +156,6 @@ export class UsersController {
       user.account = newOrg.account;
     }
 
-    // Hash Password, and invited one should not have a password
-    if (user.password) {
-      user.password = await promisify(bcrypt.hash)(user.password, 10);
-    }
     const result: User = await this.databaseService.users.updateById(
       user._id,
       user,
