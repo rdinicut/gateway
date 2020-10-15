@@ -11,13 +11,10 @@ export const PageError: FunctionComponent<Props> = ({ error }) => {
   let message = error.message || 'Something is terribly wrong';
   if (error.hasOwnProperty('isAxiosError')) {
     const axiosError = error as AxiosError;
-    if (axiosError!.response!.status) {
-      // This means that the session expired and user need to re-login
-      if (axiosError!.response!.status === 403) {
-        window.location.reload();
-        return null;
-      }
-      title = axiosError!.response!.status.toString();
+    if (error.hasOwnProperty('isAxiosError')) {
+      const axiosError = error as AxiosError;
+      title = axiosError!.response!.status ? axiosError!.response!.status.toString() : title;
+      message = (axiosError!.response!.data && axiosError!.response!.data.message) || axiosError!.response!.statusText || message;
     }
     message =
       (axiosError!.response!.data && axiosError!.response!.data.message) ||
