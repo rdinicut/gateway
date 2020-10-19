@@ -4,36 +4,31 @@ import { PERMISSIONS } from '../../lib/utils/constants';
 const config = {
   // URI for centrifuge node
   centrifugeUrl: env.CENTRIFUGE_URL || 'http://127.0.0.1:8082',
+  // The domain on which the application is hosted. Used for building links
+  // in emails
+  applicationHost: env.APPLICATION_HOST || 'http://gateway.centrifuge.io',
   // Port on which the application will run
   applicationPort: env.APPLICATION_PORT || '3001',
   sessionSecret: env.CENTRIFUGE_SESSION_SECRET || 'centrifuge',
   email: {
-    user: env.EMAIL_CLIENT_USER || 'apikey',
-    password: env.EMAIL_CLIENT_PORT || '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',
-    from: env.EMAIL_CLIENT_FROM || 'razvan.dinicut@gmail.com',
+    user: env.CENTRIFUGE_EMAIL_CLIENT_USER || 'apikey',
+    password: env.CENTRIFUGE_EMAIL_SERVICE_APIKEY,
+    from: env.CENTRIFUGE_ADMIN_EMAIL || 'gateway@centrifuge.io',
   },
   // We use replace to create a new database without changing the deployment config
   dbPath: env.DB_PATH ? env.DB_PATH.replace('db', 'db1') : './db',
   // Default admin user that will be created
   admin: {
     name: env.CENTRIFUGE_ADMIN_USER || 'admin',
-    email: env.CENTRIFUGE_ADMIN_EMAIL || 'test@test.org',
+    email: env.CENTRIFUGE_ADMIN_EMAIL || 'gateway@centrifuge.io',
     password: env.CENTRIFUGE_ADMIN_PASSWORD || 'admin',
     // Centrifuge Identity Address
-    account:
-      env.CENTRIFUGE_ADMIN_ACCOUNT ||
-      '0x66f5db3a5ecfe25cc705647d7efc4778145fd499',
+    account: env.CENTRIFUGE_ADMIN_ACCOUNT,
     chain: {
       centrifuge_chain_account: {
-        id:
-          env.CENTRIFUGE_CHAIN_ID ||
-          '0xd8a4fbe4de3e82f368210b86a9429b4612d11a8c874b59008f2e5f761c21f012',
-        secret:
-          env.CENTRIFUGE_CHAIN_SECRET ||
-          '0x6acac51ba69a5fb8a80baf6f4258a895d863fa6855794240f2ebf09f3ddac13b',
-        ss_58_address:
-          env.CENTRIFUGE_CHAIN_ADDRESS ||
-          '5GxmDB9eP6hgLVYB9yq1vZLHdzTYfQn76ZjjsnTs3QQ5hJdj',
+        id: env.CENTRIFUGE_CHAIN_ID,
+        secret: env.CENTRIFUGE_CHAIN_SECRET,
+        ss_58_address: env.CENTRIFUGE_CHAIN_ADDRESS,
       },
     },
     permissions: [

@@ -34,21 +34,6 @@ export class UsersController {
   @Post(ROUTES.USERS.login)
   @HttpCode(200)
   async login(@Body() user: User, @Request() req): Promise<User> {
-    try {
-      const emailResult = await this.mailerService.sendMail({
-        to: 'razvan.dinicut@infarm.com', // list of receivers
-        from: config.email.from, // sender address
-        subject: 'Welcome to gateway', // Subject line
-        template: 'login', // The `.pug` or `.hbs` extension is appended automatically.
-        context: {  // Data to be sent to template engine.
-          code: 'cf1a3f828287',
-          username: req.user.name,
-        },
-      });
-    } catch(e) {
-      console.log(e);
-    }
-
     return req.user;
   }
 
@@ -136,13 +121,20 @@ export class UsersController {
       true,
     );
 
-    await this.mailerService.sendMail({
-      to: user.email, // list of receivers
-      from: config.email.from, // sender address
-      subject: 'Testing Nest MailerModule ✔', // Subject line
-      text: 'welcome', // plaintext body
-      html: '<b>welcome</b>', // HTML body content
-    });
+    try {
+      await this.mailerService.sendMail({
+        to: user.email,
+        subject: 'Welcome to Centrifuge Gateway',
+        template: 'invite',
+        context: {
+          host: config.applicationHost,
+          username: user.name,
+          email: user.email,
+        },
+      });
+    } catch (e) {
+      console.log(e);
+    }
 
     return newUser;
   }
