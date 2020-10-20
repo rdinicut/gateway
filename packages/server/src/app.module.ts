@@ -37,9 +37,9 @@ import config from './config';
     OrganizationsModule,
     MailerModule.forRoot({
       transport: {
-        host: 'smtp.sendgrid.net',
-        port: 587,
-        secure: false,
+        host: config.email.host,
+        port: config.email.port,
+        secure: config.email.secure,
         auth: {
           user: config.email.user,
           pass: config.email.password,
