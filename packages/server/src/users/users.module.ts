@@ -5,7 +5,6 @@ import * as passport from 'passport';
 import { ROUTES } from '@centrifuge/gateway-lib/utils/constants';
 import { CentrifugeModule } from '../centrifuge-client/centrifuge.module';
 import {AuthModule} from '../auth/auth.module';
-
 @Module({
   controllers: [UsersController],
   providers: [],
@@ -18,7 +17,7 @@ export class UsersModule implements NestModule {
       .forRoutes(`${ROUTES.USERS.generateToken}`);
 
     consumer
-      .apply(passport.authenticate('2fa'))
+      .apply(passport.authenticate(process.env.NODE_ENV === 'development'? 'local':'2fa'))
       .forRoutes(`${ROUTES.USERS.login}`);
   }
 }
