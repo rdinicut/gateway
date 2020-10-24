@@ -44,15 +44,14 @@ if (process.env.NODE_ENV === 'development') {
         user: response,
       };
 
-      const defaultStore = {
-        user: {
-          auth: {
-            loggedInUser: response,
-          },
-        },
-      };
-      runApplication(defaultStore);
-    });
+  const defaultStore = {
+    user: {
+      auth: {
+        loggedInUser: null,
+      },
+    },
+  };
+  runApplication(defaultStore);
 
 
 } else {

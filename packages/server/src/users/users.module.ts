@@ -15,6 +15,10 @@ export class UsersModule implements NestModule {
   configure(consumer: MiddlewareConsumer): MiddlewareConsumer | void {
     consumer
       .apply(passport.authenticate('local'))
+      .forRoutes(`${ROUTES.USERS.generateToken}`);
+
+    consumer
+      .apply(passport.authenticate('2fa'))
       .forRoutes(`${ROUTES.USERS.login}`);
   }
 }

@@ -7,19 +7,20 @@ import routes from './routes';
 import { Formik } from 'formik';
 
 interface LoginProps {
+  user: User,
   onSubmit: (values: any) => void;
   error?: Error;
 }
 
-class LoginForm extends React.Component<LoginProps> {
+class TwoFAForm extends React.Component<LoginProps> {
 
   onSubmit = values => {
     this.props.onSubmit(values as User);
   };
 
   render() {
-    const user = new User();
-    const { error } = this.props;
+
+    const { error,user } = this.props;
 
     return (
       <Box align="center" justify="center">
@@ -59,25 +60,12 @@ class LoginForm extends React.Component<LoginProps> {
                   <Box gap="small">
 
                     <FormField
-                      label="Email"
-                      error={errors.email}
+                      label="Code"
+                      error={errors!.token}
                     >
                       <TextInput
-                        name="email"
-                        value={values.email || ''}
-                        onChange={handleChange}
-                      />
-                    </FormField>
-
-
-                    <FormField
-                      label="Passwor"
-                      error={errors.password}
-                    >
-                      <TextInput
-                        type="password"
-                        name="password"
-                        value={values.password || ''}
+                        name="token"
+                        value={values.token || ''}
                         onChange={handleChange}
                       />
                     </FormField>
@@ -87,12 +75,8 @@ class LoginForm extends React.Component<LoginProps> {
                     </Text>
                     }
 
-                    <Text>
-                      Not registered yet?{' '}
-                      <Link to={routes.register}>Register</Link>
-                    </Text>
                     <Box direction="row" height="50px">
-                      <Button type="submit" primary label="Login" fill={true}/>
+                      <Button type="submit" primary label="Validate Token" fill={true}/>
                     </Box>
                   </Box>
                 </form>
@@ -105,4 +89,4 @@ class LoginForm extends React.Component<LoginProps> {
   }
 }
 
-export default LoginForm;
+export default TwoFAForm;
