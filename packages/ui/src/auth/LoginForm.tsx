@@ -71,7 +71,7 @@ class LoginForm extends React.Component<LoginProps> {
 
 
                     <FormField
-                      label="Passwor"
+                      label="Password"
                       error={errors.password}
                     >
                       <TextInput
