@@ -39,7 +39,7 @@ export class AuthService {
    * @async
    * @param {string} usernameValue
    * @param {string} passwordValue
-   * @param {string} codeValue
+   * @param {string} tokenValue
    *
    * @return {Promise<User|null>} promise - a promise with the validation results. If successful
    * will return the user, otherwise it returns null.

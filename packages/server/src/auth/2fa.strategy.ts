@@ -17,10 +17,11 @@ export class TwoFAStrategy extends PassportStrategy(
   }
 
   /**
-   * Validates a user by a specified email and password
+   * Validates a user by a specified email and password and totp token
    * @async
    * @param email
    * @param password
+   * @param token
    */
   async validate(email: string, password: string, token: string) {
     const user = await this.authService.validateUserWithToken(
