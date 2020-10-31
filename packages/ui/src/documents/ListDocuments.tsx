@@ -1,11 +1,11 @@
 import React, { FunctionComponent, useCallback, useContext, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { Anchor, Box, Button, Heading } from 'grommet';
+import { Box, Button, Heading } from 'grommet';
 import documentRoutes from './routes';
 import { RouteComponentProps, withRouter } from 'react-router';
 import {Document, DocumentStatus, NftStatus} from '@centrifuge/gateway-lib/models/document';
 import { SecondaryHeader } from '../components/SecondaryHeader';
-import { canCreateDocuments, canWriteToDoc } from '@centrifuge/gateway-lib/models/user';
+import { canCreateDocuments } from '@centrifuge/gateway-lib/models/user';
 import { Preloader } from '../components/Preloader';
 import { formatDate } from '@centrifuge/gateway-lib/utils/formaters';
 import { httpClient } from '../http-client';
@@ -15,6 +15,7 @@ import { PageError } from '../components/PageError';
 import { DataTableWithDynamicHeight } from '../components/DataTableWithDynamicHeight';
 import { Schema } from '@centrifuge/gateway-lib/models/schema';
 import { getSchemaLabel } from '@centrifuge/gateway-lib/utils/schema-utils';
+import { FormNext } from 'grommet-icons';
 
 type Props = RouteComponentProps;
 
@@ -105,17 +106,6 @@ export const ListDocuments: FunctionComponent<Props> = (props: Props) => {
     return <PageError error={error}/>;
   }
 
-  const displayEdit = (doc_status: string, nft_status: string) => {
-    if (nft_status !== NftStatus.Minting) {
-      return doc_status === DocumentStatus.Created || doc_status === '';
-    }
-    return false
-  };
-
-  const displayView = (doc_status: string) => {
-    return doc_status !== DocumentStatus.CreationFail;
-  };
-
   return (
     <Box>
       <SecondaryHeader>
@@ -137,6 +127,11 @@ export const ListDocuments: FunctionComponent<Props> = (props: Props) => {
         <DataTableWithDynamicHeight
           sortable={true}
           data={getFilteredDocuments()}
+          onClickRow={({datum}) =>
+            push(
+              documentRoutes.view.replace(':id', datum._id),
+            )
+          }
           primaryKey={'_id'}
           columns={[
             {
@@ -167,30 +162,15 @@ export const ListDocuments: FunctionComponent<Props> = (props: Props) => {
               sortable: true,
             },
             {
-              property: '_id',
-              header: 'Actions',
+              header: '',
+              property: 'id',
+              align: 'center',
               sortable: false,
-              render: datum => (
-                <Box direction="row" gap="small">
-                  {displayView(datum.document_status) && <Anchor
-                    label={'View'}
-                    onClick={() =>
-                      push(
-                        documentRoutes.view.replace(':id', datum._id),
-                      )
-                    }
-                  />}
-                  {canWriteToDoc(user!, datum) && displayEdit(datum.document_status, datum.nft_status) && <Anchor
-                    label={'Edit'}
-                    onClick={() =>
-                      push(
-                        documentRoutes.edit.replace(':id', datum._id),
-                      )
-                    }
-                  />}
-                </Box>
-              ),
-            },
+              size: '36px',
+              render: () => {
+                return <FormNext/>
+              }
+            }
           ]}
         />
 
