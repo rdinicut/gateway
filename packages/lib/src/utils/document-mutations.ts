@@ -32,7 +32,6 @@ export const revertSchemaRules = (
       const multiplier = new BigNumber(attr.multiplier);
       const value = new BigNumber(attributes[attr.name].value!);
       attributes[attr.name].value = value.dividedBy(multiplier).toFixed();
-      console.log('result',value.dividedBy(multiplier).toFixed())
     }
   });
 };
