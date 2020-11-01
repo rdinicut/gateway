@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { Box, Button, Heading } from 'grommet';
 import documentRoutes from './routes';
 import { RouteComponentProps, withRouter } from 'react-router';
-import {Document, DocumentStatus, NftStatus} from '@centrifuge/gateway-lib/models/document';
+import {Document} from '@centrifuge/gateway-lib/models/document';
 import { SecondaryHeader } from '../components/SecondaryHeader';
 import { canCreateDocuments } from '@centrifuge/gateway-lib/models/user';
 import { Preloader } from '../components/Preloader';
@@ -80,7 +80,7 @@ export const ListDocuments: FunctionComponent<Props> = (props: Props) => {
   }, [setState, displayPageError]);
 
   const getFilteredDocuments = () => {
-    const sortableDocuments = documents.map((doc: any) => {
+    return  documents.map((doc: any) => {
       return {
         ...doc,
         // Datable does not have support for nested props ex data.myValue
@@ -90,8 +90,6 @@ export const ListDocuments: FunctionComponent<Props> = (props: Props) => {
         $_schema: doc.attributes._schema && getSchemaLabel(doc.attributes._schema.value, schemas),
       };
     });
-
-    return sortableDocuments;
   };
 
   useEffect(() => {
@@ -178,6 +176,5 @@ export const ListDocuments: FunctionComponent<Props> = (props: Props) => {
     </Box>
   );
 };
-
 
 export default withRouter(ListDocuments);
