@@ -90,8 +90,6 @@ export const CreateDocument: FunctionComponent<Props> = (props) => {
         } else {
           createResult = await httpClient.documents.create(document);
         }
-
-        console.log(createResult.data)
         push(documentRoutes.index);
         await httpClient.documents.commit(createResult.data._id!)
         go(0);
