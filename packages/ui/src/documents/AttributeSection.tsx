@@ -1,5 +1,4 @@
 import React, { FunctionComponent } from 'react';
-import { Schema } from '@centrifuge/gateway-lib/models/schema';
 import { Grid } from 'grommet';
 import { Section } from '../components/Section';
 import AttributeField from './AttributeField';

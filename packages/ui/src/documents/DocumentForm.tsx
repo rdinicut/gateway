@@ -214,7 +214,7 @@ export class DocumentForm extends React.Component<Props, State> {
     } else {
       clone.attributes = {
         ...defaultValues,
-        ...clone.attributes,
+        ...clone.attributes
       };
     }
 
@@ -275,6 +275,7 @@ export class DocumentForm extends React.Component<Props, State> {
           {size => {
             return (
               <Formik
+                enableReinitialize={true}
                 validationSchema={validationSchema}
                 initialValues={document}
                 validateOnBlur={submitted}
@@ -299,7 +300,7 @@ export class DocumentForm extends React.Component<Props, State> {
                         attributes={documentProps}
                         columnNo={2}
                         size={size}
-                        name={'Document Attributes'}
+                        name={'Document Details'}
                         isViewMode={true}
                       >
                         <FormField label="Document Schema">
