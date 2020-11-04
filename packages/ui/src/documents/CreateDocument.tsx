@@ -84,6 +84,17 @@ export const CreateDocument: FunctionComponent<Props> = (props) => {
       defaultDocument: document,
     });
       try {
+        document = {
+          ...document,
+          attributes: {
+            ...document.attributes,
+            [HARDCODED_FIELDS.ORIGINATOR]: {
+              type: 'bytes',
+              value: user?.account,
+            } as any
+          },
+        };
+
         let createResult: Document;
         if (document.template && document.template !== '') {
           createResult = (await httpClient.documents.clone(document)).data;
@@ -108,7 +119,7 @@ export const CreateDocument: FunctionComponent<Props> = (props) => {
         notification.alert({
           type: NOTIFICATION.ERROR,
           title: 'Failed to save document',
-          message: (e as AxiosError)!.response!.data.message,
+          message: (e as AxiosError)!.response?.data.message,
         });
       }
     };
