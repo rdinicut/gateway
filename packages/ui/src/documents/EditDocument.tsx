@@ -136,7 +136,7 @@ export const EditDocument: FunctionComponent<Props> = (props: Props) => {
   if (loadingMessage) return <Preloader message={loadingMessage} />;
   if (error) return <PageError error={error} />;
   // Redirect to view when the user can not edit this document
-  if (!canWriteToDoc(user!, document) || !documentIsEditable(document))
+  if (!canWriteToDoc(user!, document) || !documentIsEditable(document!))
     return <Redirect to={documentRoutes.view.replace(':id', id)} />;
 
   const selectedSchema: Schema | undefined = schemas.find(s => {
