@@ -44,6 +44,15 @@ export const documentHasNFTs = (document: Document) => {
   return document.header?.nfts && document.header?.nfts.length > 0;
 };
 
+export const documentIsEditable = (document: Document) => {
+  return (
+    (document.nft_status === NftStatus.NoNft ||
+      document.nft_status === NftStatus.MintingFail) &&
+    (document.document_status === DocumentStatus.Created ||
+      document.document_status === DocumentStatus.CreationFail)
+  );
+};
+
 export const getDocumentCollaborators = (
   document: Document,
   contacts: Contact[],
@@ -75,5 +84,4 @@ export const createDocumentCollaborators = (collaborators: Collaborator[]) => {
 
 export const canLoadDocument = (document: Document) => {
   return document._id && document.nft_status !== NftStatus.Minting;
-}
-
+};

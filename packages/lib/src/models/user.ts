@@ -2,7 +2,7 @@ import { PERMISSIONS } from '../utils/constants';
 import {
   Document,
   DOCUMENT_ACCESS,
-   DocumentStatus,
+  DocumentStatus, NftStatus,
 } from './document';
 import { FundingAgreement } from './funding-request';
 import { CoreapiNFT } from '../centrifuge-node-client';
@@ -60,7 +60,7 @@ export const canWriteToDoc = (
   if (!user || !doc) return false;
   return (
     accountHasDocAccess(user.account, DOCUMENT_ACCESS.WRITE, doc) &&
-    doc.document_status === DocumentStatus.Created
+    doc.document_status === DocumentStatus.Created && doc.nft_status === NftStatus.NoNft
   );
 };
 
