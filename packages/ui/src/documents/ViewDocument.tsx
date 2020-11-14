@@ -134,7 +134,7 @@ export const ViewDocument: FunctionComponent<Props> = (props: Props) => {
           </Heading>
         </Box>
         <Box direction="row" gap="medium">
-          {canWriteToDoc(user, document) && documentIsEditable(document)  && <Button
+          {canWriteToDoc(user, document) && documentIsEditable(document!)  && <Button
             primary={true}
             onClick={() => {
               push(
