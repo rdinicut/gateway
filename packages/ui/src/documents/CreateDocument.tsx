@@ -49,7 +49,7 @@ export const CreateDocument: FunctionComponent<Props> = props => {
   });
 
   const {
-    history: { push, go },
+    history: { push },
   } = props;
 
   const notification = useContext(NotificationContext);
