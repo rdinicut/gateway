@@ -144,7 +144,7 @@ const UsersList: FunctionComponent = () => {
       notification.alert({
         type: NOTIFICATION.ERROR,
         title: 'Failed to delete user',
-        message: (e as AxiosError)!.response!.data.message,
+        message: (e as AxiosError).response!.data.message,
       });
 
       setState({
