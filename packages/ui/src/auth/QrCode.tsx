@@ -1,8 +1,7 @@
 import React, { FunctionComponent, useEffect, useState } from 'react';
-import { Box, Button, FormField, Text, TextInput } from 'grommet';
+import { Box } from 'grommet';
 import QRCode from 'qrcode';
 import { User } from '@centrifuge/gateway-lib/models/user';
-import { Formik } from 'formik';
 import styled from 'styled-components';
 import TwoFAForm from './TwoFAForm';
 

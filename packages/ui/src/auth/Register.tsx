@@ -1,7 +1,7 @@
 import React, { FunctionComponent, useContext, useState } from 'react';
 
 import RegisterForm from './RegisterForm';
-import { Redirect, RouteComponentProps, withRouter } from 'react-router';
+import { RouteComponentProps, withRouter } from 'react-router';
 import { TwoFaType, User } from '@centrifuge/gateway-lib/models/user';
 import { httpClient } from '../http-client';
 import { parse } from 'query-string';
