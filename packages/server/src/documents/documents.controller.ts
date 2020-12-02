@@ -93,7 +93,7 @@ export class DocumentsController {
    * When a new version is created it updated the gateway db
    * */
   async saveDoc(document: Document, user: User) {
-    let payload:any = {
+    let payload: any = {
       document_id: document.document_id,
       attributes: document.attributes,
 
@@ -119,8 +119,8 @@ export class DocumentsController {
       payload,
     );
 
-    return await this.databaseService.documents.updateById(
-      document._id,
+    return (await this.databaseService.documents.update(
+      { 'header.document_id': createResult.header.document_id },
       {
         ...createResult,
         attributes: unflatten(createResult.attributes),
@@ -133,8 +133,11 @@ export class DocumentsController {
         nft_status: NftStatus.NoNft,
         organizationId: user.account.toLowerCase(),
       },
-      true,
-    );
+      {
+        returnUpdatedDocs: true,
+        upsert: true,
+      },
+    )) as Document;
   }
 
   async cloneDoc(document: Document, template, user: User) {
